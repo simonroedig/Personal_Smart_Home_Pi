@@ -24,8 +24,8 @@ export function CameraControls(props: {
     <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-6 shadow-lg">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Camera</h2>
-          <p className="text-sm text-zinc-400">Control and status</p>
+          <h2 className="text-lg font-semibold">Pi Camera</h2>
+          <p className="text-sm text-zinc-400">Toggle desired camera state</p>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badge.cls}`}>{badge.label}</span>
       </div>

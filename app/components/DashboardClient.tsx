@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CameraControls, { CameraState } from "./CameraControls";
-
 type ApiResponse = { camera: "on" | "off" } | { error: string };
 
-const POLL_MS = 60_000; // 1 minute polling
+// No periodic dashboard polling needed now; Pi is the only poller.
 
 export default function DashboardClient() {
   const router = useRouter();
-  const [state, setState] = useState<CameraState>("loading");
+  const [camState, setCamState] = useState<CameraState>("loading");
   const [busy, setBusy] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -18,36 +17,33 @@ export default function DashboardClient() {
     let cancelled = false;
     const load = async () => {
       try {
-        const res = await fetch("/api/state", { cache: "no-store" });
+        const res = await fetch("/api/picam", { cache: "no-store" });
         const data: ApiResponse = await res.json();
         if (!cancelled && "camera" in data) {
-          setState(data.camera);
+          setCamState(data.camera);
           setLastUpdated(new Date());
         }
-      } catch {
-        // ignore
-      }
+      } catch {}
     };
 
+    // Load once on mount to sync with server
     load();
-    const id = setInterval(load, POLL_MS);
     return () => {
       cancelled = true;
-      clearInterval(id);
     };
   }, []);
 
-  const postState = async (newState: "on" | "off") => {
+  const setDesired = async (next: "on" | "off") => {
     setBusy(true);
     try {
-      const res = await fetch("/api/state", {
+      const res = await fetch("/api/picam", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state: newState }),
+        body: JSON.stringify({ state: next }),
       });
       const data: ApiResponse = await res.json();
       if ("camera" in data) {
-        setState(data.camera);
+        setCamState(data.camera);
         setLastUpdated(new Date());
       }
     } finally {
@@ -79,17 +75,18 @@ export default function DashboardClient() {
       <main className="mx-auto max-w-4xl px-6 py-8">
         <div className="grid gap-6">
           <CameraControls
-            state={state}
+            state={camState}
             busy={busy}
             lastUpdated={lastUpdated}
-            onTurnOn={() => postState("on")}
-            onTurnOff={() => postState("off")}
+            onTurnOn={() => setDesired("on")}
+            onTurnOff={() => setDesired("off")}
           />
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h3 className="font-semibold mb-2">Raspberry Pi polling</h3>
             <p className="text-sm text-zinc-400">
-              The endpoint <code className="text-zinc-300">/api/state</code> is polled every 60 seconds. Raspberry Pi should use GET to read and POST to update.
+              Pi polls <code className="text-zinc-300">/api/picam</code> with a GET about every 60 seconds and acts on the returned
+              <code className="text-zinc-300">{`{ camera: 'on' | 'off' }`}</code> value. The dashboard updates state instantly via POST when you toggle.
             </p>
           </section>
         </div>
