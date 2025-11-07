@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function LoginClient() {
@@ -32,7 +33,15 @@ export default function LoginClient() {
     <div className="min-h-screen bg-[#0b0f12] text-zinc-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl p-8">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Simon&apos;s Smart Home</h1>
+          <Image
+            src="/icon.png"
+            alt="Smart Home Icon"
+            width={80}
+            height={80}
+            priority
+            className="mx-auto mb-3 drop-shadow-sm"
+          />
+          <h1 className="text-2xl font-semibold tracking-tight">Simon&apos;s Smart Home<br/>Dashboard</h1>
           <p className="text-sm text-zinc-400 mt-1">Sign in to continue</p>
         </div>
 
@@ -68,7 +77,7 @@ export default function LoginClient() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/90 hover:bg-cyan-400 text-black font-medium px-4 py-2.5 transition disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/90 hover:bg-cyan-400 text-black font-medium px-4 py-2.5 transition disabled:opacity-60 cursor-pointer"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>

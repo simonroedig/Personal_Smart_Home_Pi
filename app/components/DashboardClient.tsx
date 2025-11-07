@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import CameraControls, { CameraState } from "./CameraControls";
 type ApiResponse = { camera: "on" | "off" } | { error: string };
 
@@ -56,7 +57,7 @@ export default function DashboardClient() {
       <header className="border-b border-white/10">
         <div className="mx-auto max-w-4xl px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_2px_rgba(34,211,238,0.6)]" />
+            <Image src="/icon.png" alt="Icon" width={30} height={30} className="rounded-sm" />
             <span className="font-semibold tracking-tight">Simon&apos;s Smart Home Dashboard</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-zinc-400">
@@ -64,7 +65,7 @@ export default function DashboardClient() {
               onClick={() => {
                 fetch("/api/auth/logout", { method: "POST" }).finally(() => router.replace("/login"));
               }}
-              className="rounded-lg border border-white/10 px-3 py-1.5 hover:bg-white/10"
+              className="rounded-lg border border-white/10 px-3 py-1.5 hover:bg-white/10 cursor-pointer"
             >
               Logout
             </button>
@@ -86,7 +87,7 @@ export default function DashboardClient() {
             <h3 className="font-semibold mb-2">Raspberry Pi polling</h3>
             <p className="text-sm text-zinc-400">
               Pi polls <code className="text-zinc-300">/api/picam</code> with a GET about every 60 seconds and acts on the returned
-              <code className="text-zinc-300">{`{ camera: 'on' | 'off' }`}</code> value. The dashboard updates state instantly via POST when you toggle.
+              <code className="text-zinc-300"> {`{ camera: 'on' | 'off' }`}</code> value. The dashboard updates state instantly via POST when you toggle.
             </p>
           </section>
         </div>

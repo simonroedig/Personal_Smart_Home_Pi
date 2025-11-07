@@ -34,14 +34,14 @@ export function CameraControls(props: {
         <button
           onClick={onTurnOn}
           disabled={busy || state === "on"}
-          className="rounded-lg px-4 py-3 font-medium bg-emerald-500/90 hover:bg-emerald-400 text-black disabled:opacity-60"
+          className="rounded-lg px-4 py-3 font-medium bg-emerald-500/90 hover:bg-emerald-400 text-black disabled:opacity-60 cursor-pointer"
         >
           Turn ON
         </button>
         <button
           onClick={onTurnOff}
           disabled={busy || state === "off"}
-          className="rounded-lg px-4 py-3 font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-white/10 disabled:opacity-60"
+          className="rounded-lg px-4 py-3 font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-white/10 disabled:opacity-60 cursor-pointer"
         >
           Turn OFF
         </button>
