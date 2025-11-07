@@ -1,12 +1,10 @@
 #!/bin/bash
-# Smart Home aware surveillance script (Pattern A)
-# Uses /api/state target/actual protocol.
-# Reads desired target state (on/off). If target=on, captures and uploads frames.
-# Reports actual state back to server so dashboard can display physical status.
-# NOTE: Adjust endpoints, intervals, and rclone/camera commands for your environment.
+# Smart Home aware surveillance script (v5)
+# Only captures when camera state is "on"
+# Polls the Next.js API every POLL_INTERVAL seconds
 
 # ---------------- Config ----------------
-API_BASE="https://YOUR-DEPLOYED-APP-URL"   # e.g. https://simons-smarthome.vercel.app
+API_BASE="https://simons99xf-smarthome.vercel.app"   # your Vercel deployment
 STATE_ENDPOINT="$API_BASE/api/picam"
 REMOTE="gdrive:Surveillance"
 MAX_CLOUD_GB=12
@@ -15,26 +13,24 @@ PHOTO_SLEEP=0               # delay between photos while active (seconds)
 PHOTO_WIDTH=1280
 PHOTO_HEIGHT=720
 PHOTO_QUALITY=50
-SCRIPT_VERSION="v4-smart-home"
+SCRIPT_VERSION="v5-smart-home"
 MAX_DELETE_FILES=500
-CHECK_INTERVAL=200          # how many uploads before checking cloud size
-POLL_INTERVAL=60            # seconds between polling desired state
-REPORT_INTERVAL=300         # unused now (no POST heartbeat); keep for reference
+CHECK_INTERVAL=200          # uploads before checking cloud size
+POLL_INTERVAL=60            # seconds between polling API for camera state
 VERBOSE=1                   # set 0 to quiet
 # ---------------------------------------
 
 mkdir -p "$TEMP_DIR"
 UPLOAD_COUNT=0
 LAST_TARGET="off"
+LAST_POLL=0
 
 log(){ [ "$VERBOSE" = "1" ] && echo "[$(date '+%H:%M:%S')] $*"; }
 
+# Poll the Next.js API for the camera state
 poll_target(){
-  # Expect JSON like {"camera":"on"}
-  local json
+  local json tgt
   json=$(curl -fsS "$STATE_ENDPOINT" 2>/dev/null) || return 1
-  # crude extraction without jq
-  local tgt
   tgt=$(echo "$json" | grep -o '"camera":"[a-z]*"' | head -n1 | cut -d '"' -f4)
   if [ "$tgt" != "on" ] && [ "$tgt" != "off" ]; then
     return 2
@@ -43,33 +39,44 @@ poll_target(){
   return 0
 }
 
+# Capture a photo and upload to Google Drive
 capture_and_upload(){
   local DATE_STR EPOCH LOCAL_FILE
   DATE_STR=$(date +"%d-%m-%Y_%H-%M-%S")
   EPOCH=$(date +%s)
   LOCAL_FILE="$TEMP_DIR/${DATE_STR}_${EPOCH}_${SCRIPT_VERSION}.jpg"
+
   rpicam-jpeg -o "$LOCAL_FILE" -v 0 --width $PHOTO_WIDTH --height $PHOTO_HEIGHT --quality $PHOTO_QUALITY || return 1
   rclone copy "$LOCAL_FILE" "$REMOTE/" && rm "$LOCAL_FILE"
   return 0
 }
 
+# Check cloud size and prune old files if needed
 check_cloud_size(){
-  local size
+  local size limit
   size=$(rclone size "$REMOTE" --json 2>/dev/null | grep TotalSize | awk '{print $2}')
   [ -z "$size" ] && return 0
-  local limit=$((MAX_CLOUD_GB * 1024 * 1024 * 1024))
+  limit=$((MAX_CLOUD_GB * 1024 * 1024 * 1024))
   if [ "$size" -gt "$limit" ]; then
     log "Cloud size exceeds limit; pruning older files"
     rclone delete "$REMOTE" --min-age 1h --order-by name,ascending --max-delete $MAX_DELETE_FILES || true
   fi
 }
 
-log "Starting smart-home surveillance loop (Simple GET polling)"
+log "Starting smart-home surveillance loop (v5)"
 while true; do
-  # 1. Poll desired target periodically (not every frame to reduce load)
-  local_now=$(date +%s)
-  if [ $((local_now % POLL_INTERVAL)) -eq 0 ] || [ "$LAST_TARGET" = "" ]; then
-    newTarget=$(poll_target) && LAST_TARGET="$newTarget"
+  now=$(date +%s)
+
+  # Poll API if POLL_INTERVAL seconds passed or on first run
+  if (( now - LAST_POLL >= POLL_INTERVAL )) || [ -z "$LAST_TARGET" ]; then
+    newTarget=$(poll_target)
+    if [ $? -eq 0 ]; then
+      LAST_TARGET="$newTarget"
+      log "Polled camera state: $LAST_TARGET"
+    else
+      log "Failed to poll API, keeping last known state: $LAST_TARGET"
+    fi
+    LAST_POLL=$now
   fi
 
   if [ "$LAST_TARGET" = "on" ]; then
@@ -81,10 +88,10 @@ while true; do
     else
       log "Capture failed"
     fi
-    # Speed loop when active; adjust sleep for frame rate
-    sleep "$PHOTO_SLEEP"
+    sleep "$PHOTO_SLEEP"  # frame rate while active
   else
-    sleep 1
+    # Camera is off, sleep to reduce CPU usage
+    sleep "$POLL_INTERVAL"
   fi
 
 done
