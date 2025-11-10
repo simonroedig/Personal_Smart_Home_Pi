@@ -86,7 +86,7 @@ export default function DashboardClient() {
           <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h3 className="font-semibold mb-2">Raspberry Pi polling</h3>
             <p className="text-sm text-zinc-400">
-              Pi polls <code className="text-zinc-300">/api/picam</code> with a GET about every 60 seconds and acts on the returned
+              Pi polls <code className="text-zinc-300">/api/picam</code> with a GET about every X seconds and acts on the returned
               <code className="text-zinc-300"> {`{ camera: 'on' | 'off' }`}</code> value. The dashboard updates state instantly via POST when you toggle.
             </p>
           </section>

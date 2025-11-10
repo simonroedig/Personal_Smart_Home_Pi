@@ -1,5 +1,4 @@
 #!/bin/bash
-# Smart Home aware surveillance script (v5)
 # Only captures when camera state is "on"
 # Polls the Next.js API every POLL_INTERVAL seconds
 
@@ -13,10 +12,10 @@ PHOTO_SLEEP=0               # delay between photos while active (seconds)
 PHOTO_WIDTH=1280
 PHOTO_HEIGHT=720
 PHOTO_QUALITY=50
-SCRIPT_VERSION="v5-smart-home"
+SCRIPT_VERSION="v6-smart-home"
 MAX_DELETE_FILES=500
 CHECK_INTERVAL=200          # uploads before checking cloud size
-POLL_INTERVAL=60            # seconds between polling API for camera state
+POLL_INTERVAL=120           # seconds between polling API for camera state
 VERBOSE=1                   # set 0 to quiet
 # ---------------------------------------
 
