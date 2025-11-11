@@ -39,6 +39,7 @@ export type CameraState = "on" | "off";
 export interface CameraStateDoc {
   camera: CameraState;
   updatedAt: number;
+  updatedAtReadable: string; // Format: DD-MM-YYYY_HH-MM-SS_unixTimestamp
 }
 
 // Collection and document references
@@ -64,15 +65,35 @@ export async function getCameraState(): Promise<CameraState> {
 }
 
 /**
+ * Format timestamp as DD-MM-YYYY_HH-MM-SS_unixTimestamp
+ * Example: 11-11-2025_20-17-53_1731353873000
+ */
+function formatReadableTimestamp(unixTimestamp: number): string {
+  const date = new Date(unixTimestamp);
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${day}-${month}-${year}_${hours}-${minutes}-${seconds}_${unixTimestamp}`;
+}
+
+/**
  * Set the camera state in Firestore
  */
 export async function setCameraState(state: CameraState): Promise<CameraStateDoc> {
   const db = getDb();
   const docRef = db.collection(CAMERA_COLLECTION).doc(CAMERA_DOC_ID);
   
+  const now = Date.now();
   const stateDoc: CameraStateDoc = {
     camera: state,
-    updatedAt: Date.now(),
+    updatedAt: now,
+    updatedAtReadable: formatReadableTimestamp(now),
   };
 
   await docRef.set(stateDoc);
