@@ -66,17 +66,32 @@ export async function getCameraState(): Promise<CameraState> {
 /**
  * Format timestamp as DD-MM-YYYY_HH-MM-SS_unixTimestamp
  * Example: 11-11-2025_20-17-53_1731353873000
+ * Uses Europe/Berlin timezone (CET/CEST)
  */
 function formatReadableTimestamp(unixTimestamp: number): string {
   const date = new Date(unixTimestamp);
   
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
+  // Convert to Europe/Berlin timezone (Germany)
+  const formatter = new Intl.DateTimeFormat('de-DE', {
+    timeZone: 'Europe/Berlin',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
   
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const parts = formatter.formatToParts(date);
+  const get = (type: string) => parts.find(p => p.type === type)?.value || '';
+  
+  const day = get('day');
+  const month = get('month');
+  const year = get('year');
+  const hours = get('hour');
+  const minutes = get('minute');
+  const seconds = get('second');
   
   return `${day}-${month}-${year}_${hours}-${minutes}-${seconds}_${unixTimestamp}`;
 }
