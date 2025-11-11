@@ -59,3 +59,26 @@ export function sessionCookieOptions(maxAgeDays = 30): string {
   // HttpOnly to prevent JS access; Secure true assumed on Vercel; SameSite=Lax ok for this app
   return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}; ${process.env.NODE_ENV === "development" ? "" : "Secure"}`.trim();
 }
+
+/**
+ * Verify authentication via either:
+ * 1. Session cookie (dashboard/browser users)
+ * 2. PI_AUTH_KEY header (Pi script)
+ */
+export async function verifyAuth(req: Request): Promise<{ authenticated: boolean; method?: 'session' | 'api-key' }> {
+  // Check 1: Session cookie (dashboard)
+  const session = await getServerSession();
+  if (session) {
+    return { authenticated: true, method: 'session' };
+  }
+
+  // Check 2: PI_AUTH_KEY header (Pi script)
+  const apiKey = req.headers.get('x-pi-auth-key');
+  const validApiKey = process.env.PI_AUTH_KEY;
+  
+  if (apiKey && validApiKey && apiKey === validApiKey) {
+    return { authenticated: true, method: 'api-key' };
+  }
+
+  return { authenticated: false };
+}

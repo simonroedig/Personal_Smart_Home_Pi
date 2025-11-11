@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCameraState, setCameraState, CameraState } from "@/lib/firebase";
+import { verifyAuth } from "@/lib/serverAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +14,13 @@ function json(data: unknown, init?: ResponseInit) {
   return new NextResponse(JSON.stringify(data), { ...init, headers });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Require authentication for reads (only dashboard or Pi with key can read state)
+  const auth = await verifyAuth(req);
+  if (!auth.authenticated) {
+    return json({ error: "Unauthorized. Please log in or provide valid API key." }, { status: 401 });
+  }
+
   try {
     const cameraState = await getCameraState();
     return json({ camera: cameraState });
@@ -26,6 +33,12 @@ export async function GET() {
 type PostBody = { state?: "on" | "off" };
 
 export async function POST(req: Request) {
+  // Require authentication for writes (only dashboard or Pi can change state)
+  const auth = await verifyAuth(req);
+  if (!auth.authenticated) {
+    return json({ error: "Unauthorized. Please log in or provide valid API key." }, { status: 401 });
+  }
+
   try {
     const body = (await req.json().catch(() => ({}))) as Partial<PostBody>;
     const s = body?.state as PostBody["state"] | undefined;

@@ -17,6 +17,8 @@ MAX_DELETE_FILES=500
 CHECK_INTERVAL=200          # uploads before checking cloud size
 POLL_INTERVAL=120           # seconds between polling API for camera state
 VERBOSE=1                   # set 0 to quiet
+
+PI_AUTH_KEY="soOnlyICanRequestServer_ObviouslyUserealAuthKeyOnPi"
 # ---------------------------------------
 
 mkdir -p "$TEMP_DIR"
@@ -29,7 +31,7 @@ log(){ [ "$VERBOSE" = "1" ] && echo "[$(date '+%H:%M:%S')] $*"; }
 # Poll the Next.js API for the camera state
 poll_target(){
   local json tgt
-  json=$(curl -fsS "$STATE_ENDPOINT" 2>/dev/null) || return 1
+  json=$(curl -fsS -H "x-pi-auth-key: $PI_AUTH_KEY" "$STATE_ENDPOINT" 2>/dev/null) || return 1
   tgt=$(echo "$json" | grep -o '"camera":"[a-z]*"' | head -n1 | cut -d '"' -f4)
   if [ "$tgt" != "on" ] && [ "$tgt" != "off" ]; then
     return 2
