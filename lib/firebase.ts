@@ -38,8 +38,7 @@ export type CameraState = "on" | "off";
 // Document structure in Firestore
 export interface CameraStateDoc {
   camera: CameraState;
-  updatedAt: number;
-  updatedAtReadable: string; // Format: DD-MM-YYYY_HH-MM-SS_unixTimestamp
+  updatedAt: string; // Format: DD-MM-YYYY_HH-MM-SS_unixTimestamp
 }
 
 // Collection and document references
@@ -92,8 +91,7 @@ export async function setCameraState(state: CameraState): Promise<CameraStateDoc
   const now = Date.now();
   const stateDoc: CameraStateDoc = {
     camera: state,
-    updatedAt: now,
-    updatedAtReadable: formatReadableTimestamp(now),
+    updatedAt: formatReadableTimestamp(now),
   };
 
   await docRef.set(stateDoc);
