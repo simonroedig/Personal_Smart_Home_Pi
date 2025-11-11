@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-
-// Simple Pi camera state (in-memory). Note: resets on server cold starts.
-let cameraState: "on" | "off" = "off";
+import { getCameraState, setCameraState, CameraState } from "@/lib/firebase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,19 +14,30 @@ function json(data: unknown, init?: ResponseInit) {
 }
 
 export async function GET() {
-  return json({ camera: cameraState });
+  try {
+    const cameraState = await getCameraState();
+    return json({ camera: cameraState });
+  } catch (error) {
+    console.error('Error getting camera state:', error);
+    return json({ error: "Failed to retrieve camera state" }, { status: 500 });
+  }
 }
 
 type PostBody = { state?: "on" | "off" };
 
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => ({}))) as Partial<PostBody>;
-  const s = body?.state as PostBody["state"] | undefined;
-  if (s !== "on" && s !== "off") {
-    return json({ error: "Invalid state. Use 'on' or 'off'." }, { status: 400 });
+  try {
+    const body = (await req.json().catch(() => ({}))) as Partial<PostBody>;
+    const s = body?.state as PostBody["state"] | undefined;
+    if (s !== "on" && s !== "off") {
+      return json({ error: "Invalid state. Use 'on' or 'off'." }, { status: 400 });
+    }
+    const stateDoc = await setCameraState(s as CameraState);
+    return json({ camera: stateDoc.camera });
+  } catch (error) {
+    console.error('Error setting camera state:', error);
+    return json({ error: "Failed to update camera state" }, { status: 500 });
   }
-  cameraState = s;
-  return json({ camera: cameraState });
 }
 
 export async function OPTIONS() {
