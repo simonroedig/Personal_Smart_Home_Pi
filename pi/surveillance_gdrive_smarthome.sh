@@ -6,7 +6,7 @@
 API_BASE="https://simons99xf-smarthome.vercel.app"   # your Vercel deployment
 STATE_ENDPOINT="$API_BASE/api/picam"
 REMOTE="gdrive:Surveillance"
-MAX_CLOUD_GB=12
+MAX_CLOUD_GB=10
 TEMP_DIR="/home/xfecid/cam_temp"
 PHOTO_SLEEP=0               # delay between photos while active (seconds)
 PHOTO_WIDTH=1280
