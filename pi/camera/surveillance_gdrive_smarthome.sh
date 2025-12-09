@@ -15,7 +15,7 @@ PHOTO_QUALITY=50
 SCRIPT_VERSION="v6-smart-home"
 MAX_DELETE_FILES=500
 CHECK_INTERVAL=200          # uploads before checking cloud size
-POLL_INTERVAL=120           # seconds between polling API for camera state
+POLL_INTERVAL=300           # seconds between polling API for camera state
 VERBOSE=1                   # set 0 to quiet
 
 PI_AUTH_KEY="soOnlyICanRequestServer_ObviouslyUserealAuthKeyOnPi"

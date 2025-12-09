@@ -1,0 +1,20 @@
+Pi polling: The Pi calls your server GET /api/picam every POLL_INTERVAL seconds. 
+The server immediately reads Firestore for the current state and returns { camera: 'on' | 'off' } to the Pi. 
+If it’s “on”, the Pi captures/uploads; if “off”, it sleeps.
+
+Dashboard: When you open the dashboard, it does a single GET /api/picam to show the current state. 
+It’s not polling continuously. When you toggle, it sends a POST /api/picam to update Firestore.
+
+Firestore usage: Only the server (API route) talks to Firestore — on each Pi poll (GET) and when you toggle (POST). The Pi never calls Firestore directly.
+
+Extra requests: Yes, opening the dashboard triggers one Firestore read via the server. The ongoing load mainly comes from the Pi’s polling cadence.
+Authentication
+
+Dashboard users: Custom session cookie (not Firebase). 
+Login uses env creds AUTH_USERNAME/AUTH_PASSWORD at POST /api/auth/login. 
+The server sets a signed cookie smarthome_session (HMAC via SESSION_SECRET). 
+Logout clears that cookie.
+Pi: Sends x-pi-auth-key header. 
+The server checks it against PI_AUTH_KEY. No Firebase auth used.
+
+Vercel: You deploy on Vercel, but auth is handled by your own Next.js code (cookies + API key), not a Vercel auth product.
